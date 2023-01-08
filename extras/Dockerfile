@@ -66,6 +66,7 @@ COPY src/99-local.ini     /etc/php/7.4/apache2/conf.d
 
 RUN chown -R www-data:www-data /var
 RUN chown -R www-data:www-data /etc/ssl
+RUN chown -R www-data:www-data  /var/www/html
 
 RUN chmod 2775  /var/www/html
 RUN rm -f /var/www/html/index.html && \
@@ -83,9 +84,13 @@ RUN php -r "if (hash_file('sha384', 'composer-setup.php') === '55ce33d7678c5a611
 RUN php composer-setup.php
 RUN php -r "unlink('composer-setup.php');"
 RUN mv /composer.phar /var/www/html
+RUN export COMPOSER_ALLOW_SUPERUSER=1 
+ENV COMPOSER_ALLOW_SUPERUSER 1 
 
-RUN git clone url /var/www/html/applab
-RUN  /var/www/html/composer.phar  install
+RUN git clone https://github.com/rameshbalda/ApplabTest.git /var/www/html/applab
+RUN mv /var/www/html/composer.phar /var/www/html/applab/
+WORKDIR /var/www/html/applab
+RUN  /var/www/html/applab/composer.phar  install
 #RUN  /var/www/html/composer.phar create-project drupal/recommended-project /var/www/html/applab
 
 # format for chpasswd user_name:password
@@ -98,7 +103,7 @@ RUN a2ensite 000-default.conf
 USER www-data
 
 # Work directory
-WORKDIR /var/www/html/applab
+
 EXPOSE 80
 EXPOSE 443
 CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
